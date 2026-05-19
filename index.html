@@ -725,32 +725,53 @@ async function init() {
   document.getElementById('entryTime').value = new Date().toTimeString().slice(0,5);
   document.getElementById('hdp').value = activeDate;
   updateDateDisp();
-  await loadFromSheets();
+  // Show overlay and load fresh data every time
+  showOverlay('Loading latest data…');
+  await loadFromSheets(true);
   hideOverlay();
   renderAll();
 }
 
-async function loadFromSheets() {
+// Re-sync whenever the tab/app becomes visible again (switching back from another app)
+document.addEventListener('visibilitychange', async () => {
+  if (document.visibilityState === 'visible') {
+    await loadFromSheets(false); // silent refresh — no overlay
+    renderAll();
+  }
+});
+
+function showOverlay(msg) {
+  const ov = document.getElementById('loadOv');
+  ov.style.display = 'flex';
+  ov.classList.remove('hidden');
+  document.getElementById('loadTxt').textContent = msg || 'Loading…';
+}
+
+async function loadFromSheets(showLoadMsg) {
+  if (showLoadMsg) document.getElementById('loadTxt').textContent = 'Syncing from Google Sheets…';
   try {
-    document.getElementById('loadTxt').textContent = 'Syncing from Google Sheets…';
-    const res  = await fetch(SCRIPT_URL);
+    // cache:'no-store' forces a completely fresh request — bypasses browser cache and SW cache
+    const res  = await fetch(SCRIPT_URL, { cache: 'no-store' });
     const data = await res.json();
     if (data.status === 'ok' && data.entries && data.entries.length > 0) {
-      const local = JSON.parse(localStorage.getItem('fuel_entries') || '[]');
-      const localUnsynced = local.filter(e => !e.synced);
-      const sheetsIds = new Set(data.entries.map(e => String(e.id)));
-      const newLocal  = localUnsynced.filter(e => !sheetsIds.has(String(e.id)));
+      // Keep any local entries not yet synced to Sheets
+      const local          = JSON.parse(localStorage.getItem('fuel_entries') || '[]');
+      const localUnsynced  = local.filter(e => !e.synced);
+      const sheetsIds      = new Set(data.entries.map(e => String(e.id)));
+      const newLocal       = localUnsynced.filter(e => !sheetsIds.has(String(e.id)));
       entries = [...data.entries.map(e => ({...e, synced:true})), ...newLocal];
       saveLocal();
       newLocal.length ? markUnsaved() : markSaved();
     } else {
+      // Sheets returned empty or error — fall back to local cache
       entries = JSON.parse(localStorage.getItem('fuel_entries') || '[]');
       if (entries.some(e => !e.synced)) markUnsaved();
     }
   } catch(e) {
-    document.getElementById('loadTxt').textContent = 'Offline — using local data…';
+    // Offline — use local data silently
+    if (showLoadMsg) document.getElementById('loadTxt').textContent = 'Offline — using local data…';
     entries = JSON.parse(localStorage.getItem('fuel_entries') || '[]');
-    await new Promise(r => setTimeout(r, 700));
+    if (showLoadMsg) await new Promise(r => setTimeout(r, 700));
   }
 }
 
