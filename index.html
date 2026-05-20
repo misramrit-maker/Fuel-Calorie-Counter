@@ -772,7 +772,7 @@ async function loadFromSheets(showLoadMsg) {
   if (showLoadMsg) document.getElementById('loadTxt').textContent = 'Syncing from Google Sheets…';
   try {
     // cache:'no-store' forces a completely fresh request — bypasses browser cache and SW cache
-    const res  = await fetch(SCRIPT_URL, { cache: 'no-store' });
+    const res  = await fetch(SCRIPT_URL + '?nocache=' + Date.now(), { cache: 'no-store' });
     const data = await res.json();
     if (data.status === 'ok' && data.entries && data.entries.length > 0) {
       // Keep any local entries not yet synced to Sheets
@@ -818,8 +818,17 @@ function switchView(v, btn) {
     document.querySelectorAll('.mtab').forEach(t => t.classList.remove('active'));
     document.querySelector('.mtab').classList.add('active');
     renderAll();
-    // Scroll to top of main so the log is visible
-    setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 60);
+    // Small delay then scroll to log list so user sees their entry
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      // Flash the log list to draw attention
+      const ll = document.getElementById('logList');
+      if (ll) {
+        ll.style.transition = 'opacity .15s';
+        ll.style.opacity = '0.6';
+        setTimeout(() => { ll.style.opacity = '1'; }, 150);
+      }
+    }, 60);
   }
   if (v === 'trends')   renderTrends();
   if (v === 'settings') { updateMacros(); renderCustomLib(); }
@@ -983,11 +992,11 @@ function saveAndLogCustom() {
     fat:     Math.round(food.f * qty * 10) / 10,
     qty, unit: food.unit,
     meal: document.getElementById('mealSel').value,
-    date: activeDate,
+    date: new Date().toISOString().split('T')[0], // always log to today
     time: document.getElementById('entryTime').value,
     synced: false,
   });
-  saveLocal(); renderAll(); markUnsaved();
+  saveLocal(); markUnsaved();
   clearCustomForm();
   showToast(`✓ "${food.name}" saved & logged!`);
   switchView('today', document.getElementById('bn-today'));
@@ -1037,11 +1046,11 @@ function addEntry() {
     fat:     Math.round(selFood.f*qty*10)/10,
     qty, unit: selFood.unit,
     meal: document.getElementById('mealSel').value,
-    date: activeDate,
+    date: new Date().toISOString().split('T')[0], // always log to today
     time: document.getElementById('entryTime').value,
     synced: false,
   });
-  saveLocal(); renderAll(); markUnsaved();
+  saveLocal(); markUnsaved();
   document.getElementById('foodSearch').value = '';
   document.getElementById('qty').value = '1';
   document.getElementById('calEst').textContent = '— kcal';
@@ -1049,7 +1058,7 @@ function addEntry() {
   document.getElementById('entryTime').value = new Date().toTimeString().slice(0,5);
   selFood = null;
   showToast('✓ Logged!');
-  // Navigate to Today and the new entry will appear at the top of the log
+  // Switch to Today - switchView will reset activeDate to today and call renderAll
   switchView('today', document.getElementById('bn-today'));
 }
 
@@ -1261,15 +1270,21 @@ async function saveToDrive() {
   btn.disabled=true;
   btn.innerHTML=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="animation:spin 1s linear infinite"><path d="M21 12a9 9 0 11-6.22-8.56"/></svg> Saving…`;
   try{
-    const res=await fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({entries:unsync})});
-    const data=await res.json();
+    // Apps Script requires no custom headers to avoid CORS preflight
+    // Use URL-encoded form data which is a simple request (no preflight)
+    const formData = new FormData();
+    formData.append('payload', JSON.stringify({entries: unsync}));
+    const res = await fetch(SCRIPT_URL, { method:'POST', body: formData });
+    const text = await res.text();
+    let data;
+    try { data = JSON.parse(text); } catch(e) { data = { status:'error', message: text.slice(0,100) }; }
     if(data.status==='ok'){
       entries=entries.map(e=>({...e,synced:true}));
       saveLocal(); markSaved();
       showToast(`✓ ${unsync.length} row${unsync.length>1?'s':''} saved!`);
-    } else throw new Error(data.message||'Error');
+    } else throw new Error(data.message||'Unknown error from Sheets');
   } catch(err){
-    showToast('Error: '+err.message.slice(0,50),true);
+    showToast('Error: '+err.message.slice(0,60),true);
   } finally {
     btn.disabled=false;
     btn.innerHTML=`<span class="unsaved-ind ${isSaved?'':'show'}" id="unsavedDot"></span>
