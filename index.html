@@ -202,6 +202,8 @@ main{position:relative;z-index:1;max-width:680px;margin:0 auto;padding:16px 14px
 .sug-c{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;color:var(--lime);white-space:nowrap;margin-left:8px;}
 .sug-tag{font-size:9px;padding:2px 6px;border-radius:99px;margin-left:4px;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:.5px;text-transform:uppercase;}
 .tag-indian{background:rgba(255,213,79,.15);color:var(--accent2);}
+.tag-chinese{background:rgba(239,83,80,.15);color:#EF5350;}
+.tag-continental{background:rgba(38,198,218,.15);color:var(--teal);}
 .tag-custom{background:rgba(155,127,244,.15);color:var(--purple);}
 
 /* ADD CUSTOM FOOD PROMPT */
@@ -403,6 +405,18 @@ input[type="date"].hd{position:absolute;opacity:0;width:0;height:0;pointer-event
 </header>
 
 <main>
+  <!-- Sync status banner — shown briefly during background refresh -->
+  <div id="syncBanner" style="
+    display:none;
+    background:rgba(79,195,247,.12);
+    border:1px solid rgba(79,195,247,.25);
+    border-radius:var(--r-sm);
+    padding:8px 14px;
+    font-family:'Barlow Condensed',sans-serif;
+    font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
+    color:var(--lime);margin-bottom:10px;text-align:center;
+  "></div>
+
   <div class="install-bar" id="installBar">
     <div class="install-txt">📲 <strong>Add FUEL to your home screen</strong></div>
     <button class="btn-inst" id="btnInst">Install</button>
@@ -447,6 +461,8 @@ input[type="date"].hd{position:absolute;opacity:0;width:0;height:0;pointer-event
       <div class="cat-scroll">
         <button class="cat-pill active" onclick="setCat('all',this)">🌍 All</button>
         <button class="cat-pill indian" onclick="setCat('indian',this)">🇮🇳 Indian</button>
+        <button class="cat-pill" onclick="setCat('chinese',this)">🥢 Chinese</button>
+        <button class="cat-pill" onclick="setCat('continental',this)">🍝 Continental</button>
         <button class="cat-pill" onclick="setCat('world',this)">🌎 World</button>
         <button class="cat-pill custom" onclick="setCat('custom',this)">⭐ My Foods</button>
       </div>
@@ -701,6 +717,128 @@ const BUILTIN_DB = [
   {name:"Caesar salad",cal:470,unit:"serving",p:10,c:20,f:40,cat:"world"},
   {name:"Granola bar",cal:193,unit:"bar",p:4,c:29,f:7.6,cat:"world"},
   {name:"Rice cakes",cal:35,unit:"cake",p:0.7,c:7,f:0.3,cat:"world"},
+
+  // ── CONTINENTAL / EUROPEAN ──
+  {name:"Croissant (plain)",cal:231,unit:"piece",p:5,c:26,f:12,cat:"continental"},
+  {name:"Baguette slice",cal:80,unit:"slice",p:3,c:15,f:0.7,cat:"continental"},
+  {name:"Sourdough bread slice",cal:85,unit:"slice",p:3.5,c:17,f:0.5,cat:"continental"},
+  {name:"Brioche bun",cal:230,unit:"bun",p:6,c:32,f:9,cat:"continental"},
+  {name:"Focaccia",cal:270,unit:"slice",p:6,c:40,f:9,cat:"continental"},
+  {name:"Ciabatta roll",cal:190,unit:"roll",p:6,c:36,f:2,cat:"continental"},
+  {name:"Scrambled eggs (2 eggs)",cal:220,unit:"serving",p:14,c:2,f:16,cat:"continental"},
+  {name:"Omelette (plain 2 egg)",cal:190,unit:"omelette",p:13,c:1,f:14,cat:"continental"},
+  {name:"Eggs Benedict",cal:550,unit:"plate",p:24,c:30,f:36,cat:"continental"},
+  {name:"French Toast",cal:320,unit:"2 slices",p:10,c:38,f:14,cat:"continental"},
+  {name:"Pancakes (2 plain)",cal:360,unit:"2 pieces",p:9,c:56,f:10,cat:"continental"},
+  {name:"Waffles (2 plain)",cal:410,unit:"2 pieces",p:9,c:56,f:16,cat:"continental"},
+  {name:"Granola with milk",cal:350,unit:"bowl",p:10,c:58,f:8,cat:"continental"},
+  {name:"Avocado Toast",cal:290,unit:"slice",p:7,c:28,f:17,cat:"continental"},
+  {name:"Smoked Salmon Bagel",cal:420,unit:"bagel",p:26,c:46,f:12,cat:"continental"},
+  {name:"Caesar Salad",cal:360,unit:"bowl",p:10,c:18,f:26,cat:"continental"},
+  {name:"Greek Salad",cal:180,unit:"bowl",p:5,c:12,f:13,cat:"continental"},
+  {name:"Caprese Salad",cal:220,unit:"plate",p:12,c:6,f:16,cat:"continental"},
+  {name:"Niçoise Salad",cal:310,unit:"bowl",p:22,c:14,f:18,cat:"continental"},
+  {name:"Tomato Soup",cal:130,unit:"bowl",p:3,c:18,f:4,cat:"continental"},
+  {name:"French Onion Soup",cal:350,unit:"bowl",p:13,c:32,f:18,cat:"continental"},
+  {name:"Minestrone Soup",cal:150,unit:"bowl",p:7,c:22,f:3,cat:"continental"},
+  {name:"Clam Chowder",cal:290,unit:"bowl",p:12,c:26,f:14,cat:"continental"},
+  {name:"Spaghetti Bolognese",cal:520,unit:"plate",p:28,c:60,f:14,cat:"continental"},
+  {name:"Spaghetti Carbonara",cal:580,unit:"plate",p:26,c:56,f:22,cat:"continental"},
+  {name:"Fettuccine Alfredo",cal:600,unit:"plate",p:18,c:62,f:30,cat:"continental"},
+  {name:"Penne Arrabbiata",cal:420,unit:"plate",p:14,c:72,f:8,cat:"continental"},
+  {name:"Lasagne (beef)",cal:430,unit:"slice",p:24,c:36,f:18,cat:"continental"},
+  {name:"Margherita Pizza (2 slices)",cal:450,unit:"2 slices",p:18,c:58,f:14,cat:"continental"},
+  {name:"Pepperoni Pizza (2 slices)",cal:540,unit:"2 slices",p:22,c:56,f:24,cat:"continental"},
+  {name:"Risotto (mushroom)",cal:380,unit:"bowl",p:10,c:62,f:9,cat:"continental"},
+  {name:"Gnocchi with pesto",cal:440,unit:"plate",p:11,c:62,f:16,cat:"continental"},
+  {name:"Quiche Lorraine (slice)",cal:380,unit:"slice",p:14,c:24,f:26,cat:"continental"},
+  {name:"Beef Steak (sirloin 200g)",cal:440,unit:"steak",p:46,c:0,f:28,cat:"continental"},
+  {name:"Grilled Salmon (200g)",cal:415,unit:"fillet",p:40,c:0,f:26,cat:"continental"},
+  {name:"Chicken Schnitzel",cal:420,unit:"piece",p:34,c:20,f:22,cat:"continental"},
+  {name:"Beef Burger",cal:560,unit:"burger",p:30,c:42,f:26,cat:"continental"},
+  {name:"Fish & Chips",cal:840,unit:"serving",p:32,c:90,f:38,cat:"continental"},
+  {name:"Roast Chicken (quarter)",cal:340,unit:"quarter",p:40,c:0,f:19,cat:"continental"},
+  {name:"Lamb Chops (2 pieces)",cal:480,unit:"2 pieces",p:38,c:0,f:34,cat:"continental"},
+  {name:"Beef Stew",cal:310,unit:"bowl",p:26,c:18,f:12,cat:"continental"},
+  {name:"Shepherd's Pie",cal:400,unit:"serving",p:22,c:36,f:16,cat:"continental"},
+  {name:"Mashed Potato",cal:210,unit:"cup",p:4,c:36,f:6,cat:"continental"},
+  {name:"Roast Potatoes",cal:190,unit:"cup",p:3,c:32,f:5,cat:"continental"},
+  {name:"Coleslaw",cal:150,unit:"cup",p:1.5,c:14,f:10,cat:"continental"},
+  {name:"Hummus",cal:166,unit:"100g",p:8,c:14,f:9,cat:"continental"},
+  {name:"Tzatziki",cal:70,unit:"100g",p:4,c:4,f:4,cat:"continental"},
+  {name:"Brie cheese",cal:334,unit:"100g",p:21,c:0.5,f:28,cat:"continental"},
+  {name:"Camembert",cal:300,unit:"100g",p:20,c:0.5,f:24,cat:"continental"},
+  {name:"Tiramisu",cal:450,unit:"slice",p:7,c:44,f:26,cat:"continental"},
+  {name:"Crème Brûlée",cal:340,unit:"ramekin",p:5,c:28,f:22,cat:"continental"},
+  {name:"Chocolate Mousse",cal:320,unit:"cup",p:5,c:26,f:22,cat:"continental"},
+  {name:"Profiteroles (3 pieces)",cal:380,unit:"3 pieces",p:6,c:34,f:24,cat:"continental"},
+  {name:"Crêpe (plain)",cal:112,unit:"piece",p:3,c:15,f:4,cat:"continental"},
+  {name:"Croissant au beurre",cal:280,unit:"piece",p:6,c:30,f:15,cat:"continental"},
+  {name:"Apple Strudel",cal:290,unit:"slice",p:4,c:44,f:11,cat:"continental"},
+  {name:"Cheesecake slice",cal:400,unit:"slice",p:7,c:36,f:26,cat:"continental"},
+  {name:"Hash Browns (2 pieces)",cal:220,unit:"2 pieces",p:2.5,c:28,f:11,cat:"continental"},
+  {name:"Baked Beans (on toast)",cal:290,unit:"serving",p:13,c:50,f:3,cat:"continental"},
+  {name:"Baked Beans (half tin)",cal:160,unit:"half tin",p:9,c:28,f:0.5,cat:"continental"},
+
+  // ── CHINESE FOOD ──
+  {name:"Steamed Rice",cal:130,unit:"100g",p:2.7,c:28,f:0.3,cat:"chinese"},
+  {name:"Egg Fried Rice",cal:280,unit:"bowl",p:8,c:42,f:9,cat:"chinese"},
+  {name:"Yang Chow Fried Rice",cal:340,unit:"bowl",p:12,c:48,f:10,cat:"chinese"},
+  {name:"Plain Noodles (boiled)",cal:138,unit:"100g",p:4.5,c:27,f:0.6,cat:"chinese"},
+  {name:"Chow Mein",cal:320,unit:"plate",p:14,c:42,f:10,cat:"chinese"},
+  {name:"Lo Mein (veg)",cal:290,unit:"plate",p:9,c:44,f:8,cat:"chinese"},
+  {name:"Singapore Noodles",cal:350,unit:"plate",p:16,c:46,f:10,cat:"chinese"},
+  {name:"Dan Dan Noodles",cal:480,unit:"bowl",p:20,c:52,f:18,cat:"chinese"},
+  {name:"Wonton Soup",cal:180,unit:"bowl",p:10,c:22,f:5,cat:"chinese"},
+  {name:"Hot & Sour Soup",cal:120,unit:"bowl",p:6,c:14,f:4,cat:"chinese"},
+  {name:"Egg Drop Soup",cal:90,unit:"bowl",p:6,c:8,f:3,cat:"chinese"},
+  {name:"Sweet Corn Soup",cal:150,unit:"bowl",p:5,c:22,f:4,cat:"chinese"},
+  {name:"Dim Sum (3 pieces)",cal:180,unit:"3 pieces",p:8,c:20,f:7,cat:"chinese"},
+  {name:"Har Gow (3 pieces)",cal:150,unit:"3 pieces",p:8,c:18,f:4,cat:"chinese"},
+  {name:"Siu Mai (3 pieces)",cal:170,unit:"3 pieces",p:10,c:16,f:6,cat:"chinese"},
+  {name:"Char Siu Bao (steamed)",cal:220,unit:"piece",p:8,c:32,f:6,cat:"chinese"},
+  {name:"Char Siu Bao (baked)",cal:270,unit:"piece",p:9,c:38,f:9,cat:"chinese"},
+  {name:"Spring Roll (fried)",cal:160,unit:"piece",p:4,c:18,f:8,cat:"chinese"},
+  {name:"Spring Roll (fresh)",cal:80,unit:"piece",p:3,c:12,f:2,cat:"chinese"},
+  {name:"Prawn Crackers",cal:150,unit:"serving",p:1,c:18,f:8,cat:"chinese"},
+  {name:"Sesame Prawn Toast",cal:120,unit:"piece",p:5,c:10,f:7,cat:"chinese"},
+  {name:"Peking Duck (wrap)",cal:280,unit:"wrap",p:16,c:24,f:12,cat:"chinese"},
+  {name:"Sweet & Sour Pork",cal:380,unit:"plate",p:18,c:42,f:14,cat:"chinese"},
+  {name:"Sweet & Sour Chicken",cal:340,unit:"plate",p:20,c:38,f:11,cat:"chinese"},
+  {name:"Kung Pao Chicken",cal:320,unit:"plate",p:28,c:18,f:14,cat:"chinese"},
+  {name:"General Tso's Chicken",cal:420,unit:"plate",p:24,c:38,f:16,cat:"chinese"},
+  {name:"Lemon Chicken",cal:360,unit:"plate",p:22,c:34,f:12,cat:"chinese"},
+  {name:"Honey Sesame Chicken",cal:380,unit:"plate",p:22,c:36,f:14,cat:"chinese"},
+  {name:"Crispy Shredded Beef",cal:400,unit:"plate",p:20,c:38,f:18,cat:"chinese"},
+  {name:"Mongolian Beef",cal:350,unit:"plate",p:26,c:28,f:14,cat:"chinese"},
+  {name:"Beef in Black Bean Sauce",cal:300,unit:"plate",p:24,c:20,f:12,cat:"chinese"},
+  {name:"Char Siu (BBQ Pork)",cal:280,unit:"100g",p:22,c:22,f:10,cat:"chinese"},
+  {name:"Ma Po Tofu",cal:250,unit:"bowl",p:14,c:14,f:14,cat:"chinese"},
+  {name:"Braised Tofu",cal:180,unit:"bowl",p:12,c:8,f:10,cat:"chinese"},
+  {name:"Stir-fried Vegetables",cal:130,unit:"bowl",p:4,c:14,f:6,cat:"chinese"},
+  {name:"Garlic Bok Choy",cal:80,unit:"bowl",p:3,c:6,f:4,cat:"chinese"},
+  {name:"Steamed Broccoli (Chinese)",cal:55,unit:"bowl",p:3.5,c:8,f:0.5,cat:"chinese"},
+  {name:"Prawn in Garlic Sauce",cal:240,unit:"plate",p:22,c:10,f:12,cat:"chinese"},
+  {name:"Steamed Fish (whole)",cal:180,unit:"serving",p:28,c:2,f:6,cat:"chinese"},
+  {name:"Salt & Pepper Squid",cal:280,unit:"plate",p:18,c:20,f:12,cat:"chinese"},
+  {name:"Chilli Garlic Prawns",cal:220,unit:"plate",p:20,c:8,f:12,cat:"chinese"},
+  {name:"Moo Shu Pork",cal:310,unit:"plate",p:20,c:20,f:14,cat:"chinese"},
+  {name:"Mapo Eggplant",cal:200,unit:"bowl",p:5,c:16,f:12,cat:"chinese"},
+  {name:"Szechuan Hot Pot (veg)",cal:200,unit:"bowl",p:8,c:18,f:10,cat:"chinese"},
+  {name:"Gyoza / Potstickers (5)",cal:240,unit:"5 pieces",p:10,c:28,f:8,cat:"chinese"},
+  {name:"Congee / Jook (plain)",cal:140,unit:"bowl",p:4,c:28,f:1,cat:"chinese"},
+  {name:"Congee with chicken",cal:200,unit:"bowl",p:14,c:28,f:3,cat:"chinese"},
+  {name:"Fortune Cookie",cal:30,unit:"piece",p:0.4,c:7,f:0.3,cat:"chinese"},
+  {name:"Mango Pudding",cal:160,unit:"cup",p:2,c:28,f:5,cat:"chinese"},
+  {name:"Egg Tart",cal:220,unit:"piece",p:5,c:26,f:11,cat:"chinese"},
+  {name:"Sesame Balls (2)",cal:260,unit:"2 pieces",p:4,c:38,f:10,cat:"chinese"},
+  {name:"Green Tea (plain)",cal:2,unit:"cup",p:0,c:0,f:0,cat:"chinese"},
+  {name:"Jasmine Tea",cal:2,unit:"cup",p:0,c:0,f:0,cat:"chinese"},
+  {name:"Bubble Tea (milk)",cal:380,unit:"cup",p:3,c:70,f:8,cat:"chinese"},
+  {name:"Plum Sauce",cal:60,unit:"tbsp",p:0.2,c:15,f:0,cat:"chinese"},
+  {name:"Hoisin Sauce",cal:35,unit:"tbsp",p:0.5,c:7,f:0.5,cat:"chinese"},
+  {name:"Oyster Sauce",cal:18,unit:"tbsp",p:0.5,c:4,f:0,cat:"chinese"},
+  {name:"Soy Sauce",cal:10,unit:"tbsp",p:1,c:1,f:0,cat:"chinese"},
 ];
 
 // ── STATE ────────────────────────────────────────────────────────
@@ -751,19 +889,37 @@ async function init() {
   document.getElementById('entryTime').value = new Date().toTimeString().slice(0,5);
   document.getElementById('hdp').value = activeDate;
   updateDateDisp();
-  // Show overlay and load fresh data every time
-  showOverlay('Loading latest data…');
-  await loadFromSheets(true);
-  hideOverlay();
+
+  // Step 1: immediately render from local cache so app feels instant
+  entries = JSON.parse(localStorage.getItem('fuel_entries') || '[]');
   renderAll();
+
+  // Step 2: fetch fresh from Sheets — show a small non-blocking banner
+  showSyncBanner('Syncing latest data…');
+  await loadFromSheets();
+  hideSyncBanner();
+
+  // Step 3: re-render with fresh Sheets data
+  renderAll();
+  hideOverlay();
 }
 
-// Re-sync whenever the tab/app becomes visible again (switching back from another app)
+// Re-sync every time the app becomes visible (switching back from another tab/app)
 document.addEventListener('visibilitychange', async () => {
   if (document.visibilityState === 'visible') {
-    await loadFromSheets(false); // silent refresh — no overlay
+    showSyncBanner('Refreshing…');
+    await loadFromSheets();
+    hideSyncBanner();
     renderAll();
   }
+});
+
+// Also re-sync when window gets focus (covers desktop switching)
+window.addEventListener('focus', async () => {
+  showSyncBanner('Refreshing…');
+  await loadFromSheets();
+  hideSyncBanner();
+  renderAll();
 });
 
 function showOverlay(msg) {
@@ -773,38 +929,56 @@ function showOverlay(msg) {
   document.getElementById('loadTxt').textContent = msg || 'Loading…';
 }
 
-async function loadFromSheets(showLoadMsg) {
-  if (showLoadMsg) document.getElementById('loadTxt').textContent = 'Syncing from Google Sheets…';
-  try {
-    // cache:'no-store' forces a completely fresh request — bypasses browser cache and SW cache
-    const res  = await fetch(SCRIPT_URL + '?nocache=' + Date.now(), { cache: 'no-store' });
-    const data = await res.json();
-    if (data.status === 'ok' && data.entries && data.entries.length > 0) {
-      // Keep any local entries not yet synced to Sheets
-      const local          = JSON.parse(localStorage.getItem('fuel_entries') || '[]');
-      const localUnsynced  = local.filter(e => !e.synced);
-      const sheetsIds      = new Set(data.entries.map(e => String(e.id)));
-      const newLocal       = localUnsynced.filter(e => !sheetsIds.has(String(e.id)));
-      entries = [...data.entries.map(e => ({...e, synced:true})), ...newLocal];
-      saveLocal();
-      newLocal.length ? markUnsaved() : markSaved();
-    } else {
-      // Sheets returned empty or error — fall back to local cache
-      entries = JSON.parse(localStorage.getItem('fuel_entries') || '[]');
-      if (entries.some(e => !e.synced)) markUnsaved();
-    }
-  } catch(e) {
-    // Offline — use local data silently
-    if (showLoadMsg) document.getElementById('loadTxt').textContent = 'Offline — using local data…';
-    entries = JSON.parse(localStorage.getItem('fuel_entries') || '[]');
-    if (showLoadMsg) await new Promise(r => setTimeout(r, 700));
-  }
-}
-
 function hideOverlay() {
   const ov = document.getElementById('loadOv');
   ov.classList.add('hidden');
-  setTimeout(() => ov.style.display = 'none', 500);
+  setTimeout(() => ov.style.display = 'none', 400);
+}
+
+function showSyncBanner(msg) {
+  let b = document.getElementById('syncBanner');
+  if (!b) return;
+  b.textContent = '⟳ ' + msg;
+  b.style.display = 'block';
+}
+
+function hideSyncBanner() {
+  const b = document.getElementById('syncBanner');
+  if (b) b.style.display = 'none';
+}
+
+async function loadFromSheets() {
+  try {
+    // Always bypass every cache layer — no-store + timestamp param
+    const res  = await fetch(SCRIPT_URL + '?t=' + Date.now(), {
+      cache: 'no-store',
+      headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache' }
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const text = await res.text();
+    let data;
+    try { data = JSON.parse(text); }
+    catch(e) { throw new Error('Invalid response from Sheets'); }
+
+    if (data.status === 'ok') {
+      const sheetsEntries = data.entries || [];
+      // Merge: Sheets is source of truth + keep any local-only unsynced entries
+      const local         = JSON.parse(localStorage.getItem('fuel_entries') || '[]');
+      const localUnsynced = local.filter(e => !e.synced);
+      const sheetsIds     = new Set(sheetsEntries.map(e => String(e.id)));
+      const onlyLocal     = localUnsynced.filter(e => !sheetsIds.has(String(e.id)));
+      entries = [
+        ...sheetsEntries.map(e => ({...e, synced: true})),
+        ...onlyLocal
+      ];
+      saveLocal();
+      onlyLocal.length ? markUnsaved() : markSaved();
+    }
+    // If status != ok, keep whatever entries we already have
+  } catch(e) {
+    // Offline or error — silently keep current entries (already loaded from local in init)
+    console.warn('Sheets sync failed:', e.message);
+  }
 }
 
 // ── VIEW SWITCH ──────────────────────────────────────────────────
@@ -889,8 +1063,10 @@ function onSearch(val) {
   }
 
   box.innerHTML = matches.map(f => {
-    const tag = f.cat === 'indian' ? `<span class="sug-tag tag-indian">Indian</span>`
-               : f.cat === 'custom' ? `<span class="sug-tag tag-custom">Mine</span>` : '';
+    const tag = f.cat === 'indian'      ? `<span class="sug-tag tag-indian">Indian</span>`
+               : f.cat === 'chinese'     ? `<span class="sug-tag tag-chinese">Chinese</span>`
+               : f.cat === 'continental' ? `<span class="sug-tag tag-continental">Continental</span>`
+               : f.cat === 'custom'      ? `<span class="sug-tag tag-custom">Mine</span>` : '';
     return `<div class="sug" onclick="pickFood('${f.name.replace(/'/g,"\\'")}','${f.cat}')">
       <span>${f.name}${tag}</span>
       <span class="sug-c">${f.cal} kcal / ${f.unit}</span>
