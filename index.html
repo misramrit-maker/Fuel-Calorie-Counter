@@ -61,7 +61,9 @@ header{
   box-shadow:0 3px 12px rgba(255,213,79,.4);
 }
 .btn-save:active{transform:scale(.97);opacity:.9;}
-.btn-save:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+.btn-save:disabled{opacity:.7;cursor:not-allowed;transform:none;}
+.btn-save.saving .btn-icon{display:none;}
+.btn-save.saving .btn-spinner{display:inline !important;}
 .sync-pill{
   display:inline-flex;align-items:center;gap:5px;
   font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
@@ -385,14 +387,17 @@ input[type="date"].hd{position:absolute;opacity:0;width:0;height:0;pointer-event
       <span class="sync-dot" id="syncDot"></span>
       <span id="syncTxt">Unsaved</span>
     </div>
+    <span class="unsaved-ind" id="unsavedDot"></span>
     <button class="btn-save" id="saveBtn" onclick="saveToDrive()">
-      <span class="unsaved-ind" id="unsavedDot"></span>
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <svg class="btn-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
         <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v14a2 2 0 01-2 2z"/>
         <polyline points="17 21 17 13 7 13 7 21"/>
         <polyline points="7 3 7 8 15 8"/>
       </svg>
-      Save
+      <svg class="btn-spinner" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:none;animation:spin 1s linear infinite">
+        <path d="M21 12a9 9 0 11-6.22-8.56"/>
+      </svg>
+      <span class="btn-label">Save</span>
     </button>
   </div>
 </header>
@@ -1247,51 +1252,66 @@ function fmtDS(d) { return new Date(d+'T12:00:00').toLocaleDateString('en-GB',{d
 function saveLocal(){localStorage.setItem('fuel_entries',JSON.stringify(entries));}
 
 function markUnsaved(){
-  isSaved=false;
-  document.getElementById('syncPill').className='sync-pill';
-  document.getElementById('syncTxt').textContent='Unsaved';
-  document.getElementById('syncDot').style.background='var(--muted)';
-  document.getElementById('unsavedDot').classList.add('show');
+  isSaved = false;
+  const pill = document.getElementById('syncPill');
+  const dot  = document.getElementById('syncDot');
+  const ud   = document.getElementById('unsavedDot');
+  const txt  = document.getElementById('syncTxt');
+  if (pill) pill.className = 'sync-pill';
+  if (txt)  txt.textContent = 'Unsaved';
+  if (dot)  dot.style.background = 'var(--muted)';
+  if (ud)   ud.classList.add('show');
 }
 function markSaved(){
-  isSaved=true;
-  document.getElementById('syncPill').className='sync-pill saved';
-  document.getElementById('syncTxt').textContent='Saved';
-  document.getElementById('syncDot').style.background='var(--teal)';
-  document.getElementById('unsavedDot').classList.remove('show');
-  document.getElementById('lastSyncTxt').textContent='Last synced: '+new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+  isSaved = true;
+  const pill = document.getElementById('syncPill');
+  const dot  = document.getElementById('syncDot');
+  const ud   = document.getElementById('unsavedDot');
+  const txt  = document.getElementById('syncTxt');
+  const lst  = document.getElementById('lastSyncTxt');
+  if (pill) pill.className = 'sync-pill saved';
+  if (txt)  txt.textContent = 'Saved';
+  if (dot)  dot.style.background = 'var(--teal)';
+  if (ud)   ud.classList.remove('show');
+  if (lst)  lst.textContent = 'Last synced: ' + new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
 }
 
 // ── SAVE TO SHEETS ────────────────────────────────────────────────
 async function saveToDrive() {
-  const unsync=entries.filter(e=>!e.synced);
-  if(!unsync.length){showToast('All entries already saved!');return;}
-  const btn=document.getElementById('saveBtn');
-  btn.disabled=true;
-  btn.innerHTML=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="animation:spin 1s linear infinite"><path d="M21 12a9 9 0 11-6.22-8.56"/></svg> Saving…`;
-  try{
-    // Apps Script requires no custom headers to avoid CORS preflight
-    // Use URL-encoded form data which is a simple request (no preflight)
+  const unsync = entries.filter(e => !e.synced);
+  if (!unsync.length) { showToast('All entries already saved!'); return; }
+
+  const btn = document.getElementById('saveBtn');
+  const btnText = btn.querySelector('.btn-label');
+
+  // Show saving state — only swap the label text, never touch innerHTML
+  btn.disabled = true;
+  btn.classList.add('saving');
+  if (btnText) btnText.textContent = 'Saving…';
+
+  try {
     const formData = new FormData();
-    formData.append('payload', JSON.stringify({entries: unsync}));
-    const res = await fetch(SCRIPT_URL, { method:'POST', body: formData });
+    formData.append('payload', JSON.stringify({ entries: unsync }));
+    const res  = await fetch(SCRIPT_URL, { method: 'POST', body: formData });
     const text = await res.text();
     let data;
-    try { data = JSON.parse(text); } catch(e) { data = { status:'error', message: text.slice(0,100) }; }
-    if(data.status==='ok'){
-      entries=entries.map(e=>({...e,synced:true}));
-      saveLocal(); markSaved();
-      showToast(`✓ ${unsync.length} row${unsync.length>1?'s':''} saved!`);
-    } else throw new Error(data.message||'Unknown error from Sheets');
-  } catch(err){
-    showToast('Error: '+err.message.slice(0,60),true);
+    try { data = JSON.parse(text); }
+    catch(e) { data = { status: 'error', message: 'Bad response: ' + text.slice(0, 80) }; }
+
+    if (data.status === 'ok') {
+      entries = entries.map(e => ({...e, synced: true}));
+      saveLocal();
+      markSaved();
+      showToast(`✓ ${unsync.length} row${unsync.length > 1 ? 's' : ''} saved to Sheets!`);
+    } else {
+      throw new Error(data.message || 'Unknown error from Sheets');
+    }
+  } catch(err) {
+    showToast('Save error: ' + err.message.slice(0, 60), true);
   } finally {
-    btn.disabled=false;
-    btn.innerHTML=`<span class="unsaved-ind ${isSaved?'':'show'}" id="unsavedDot"></span>
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v14a2 2 0 01-2 2z"/>
-        <polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
-      </svg> Save`;
+    btn.disabled = false;
+    btn.classList.remove('saving');
+    if (btnText) btnText.textContent = 'Save';
   }
 }
 
