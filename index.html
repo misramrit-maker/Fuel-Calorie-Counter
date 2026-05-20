@@ -895,9 +895,7 @@ async function init() {
   renderAll();
 
   // Step 2: fetch fresh from Sheets — show a small non-blocking banner
-  showSyncBanner('Syncing latest data…');
-  await loadFromSheets();
-  hideSyncBanner();
+  await loadFromSheets(); // fetches, shows its own banner messages
 
   // Step 3: re-render with fresh Sheets data
   renderAll();
@@ -907,18 +905,14 @@ async function init() {
 // Re-sync every time the app becomes visible (switching back from another tab/app)
 document.addEventListener('visibilitychange', async () => {
   if (document.visibilityState === 'visible') {
-    showSyncBanner('Refreshing…');
     await loadFromSheets();
-    hideSyncBanner();
     renderAll();
   }
 });
 
-// Also re-sync when window gets focus (covers desktop switching)
+// Also re-sync when window gets focus (covers desktop browser tab switching)
 window.addEventListener('focus', async () => {
-  showSyncBanner('Refreshing…');
   await loadFromSheets();
-  hideSyncBanner();
   renderAll();
 });
 
@@ -936,10 +930,7 @@ function hideOverlay() {
 }
 
 function showSyncBanner(msg) {
-  let b = document.getElementById('syncBanner');
-  if (!b) return;
-  b.textContent = '⟳ ' + msg;
-  b.style.display = 'block';
+  updateSyncBannerText('⟳ ' + msg);
 }
 
 function hideSyncBanner() {
@@ -949,36 +940,78 @@ function hideSyncBanner() {
 
 async function loadFromSheets() {
   try {
-    // Always bypass every cache layer — no-store + timestamp param
-    const res  = await fetch(SCRIPT_URL + '?t=' + Date.now(), {
-      cache: 'no-store',
-      headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache' }
-    });
+    updateSyncBannerText('Syncing from Sheets…');
+
+    const url = SCRIPT_URL + '?t=' + Date.now();
+    const res = await fetch(url, { cache: 'no-store' });
+
     if (!res.ok) throw new Error('HTTP ' + res.status);
+
     const text = await res.text();
+    console.log('[FUEL] Raw Sheets response (first 300):', text.slice(0, 300));
+
     let data;
     try { data = JSON.parse(text); }
-    catch(e) { throw new Error('Invalid response from Sheets'); }
+    catch(e) { throw new Error('Could not parse Sheets response: ' + text.slice(0, 100)); }
+
+    console.log('[FUEL] Sheets status:', data.status, '| entries received:', (data.entries||[]).length);
 
     if (data.status === 'ok') {
-      const sheetsEntries = data.entries || [];
-      // Merge: Sheets is source of truth + keep any local-only unsynced entries
-      const local         = JSON.parse(localStorage.getItem('fuel_entries') || '[]');
-      const localUnsynced = local.filter(e => !e.synced);
-      const sheetsIds     = new Set(sheetsEntries.map(e => String(e.id)));
-      const onlyLocal     = localUnsynced.filter(e => !sheetsIds.has(String(e.id)));
-      entries = [
-        ...sheetsEntries.map(e => ({...e, synced: true})),
-        ...onlyLocal
-      ];
+      const raw = data.entries || [];
+
+      // Normalise every field — Apps Script can return dates as objects, numbers as strings
+      const sheetsEntries = raw.map(e => ({
+        id:      Number(e.id),
+        date:    String(e.date || '').trim(),
+        time:    String(e.time || '').trim(),
+        meal:    String(e.meal || '').trim(),
+        food:    String(e.food || '').trim(),
+        qty:     parseFloat(e.qty)  || 1,
+        unit:    String(e.unit || 'serving').trim(),
+        cal:     parseInt(e.cal)    || 0,
+        protein: parseFloat(e.protein) || 0,
+        carbs:   parseFloat(e.carbs)   || 0,
+        fat:     parseFloat(e.fat)     || 0,
+        synced:  true,
+      })).filter(e => e.id && e.date && e.food); // skip any malformed rows
+
+      console.log('[FUEL] Normalised entries:', sheetsEntries.length,
+        '| sample:', sheetsEntries[0] ? JSON.stringify(sheetsEntries[0]) : 'none');
+
+      // Merge: Sheets is source of truth; keep local-only unsynced entries on top
+      const local        = JSON.parse(localStorage.getItem('fuel_entries') || '[]');
+      const unsyncedLocal = local.filter(e => !e.synced);
+      const sheetsIds    = new Set(sheetsEntries.map(e => String(e.id)));
+      const onlyLocal    = unsyncedLocal.filter(e => !sheetsIds.has(String(e.id)));
+
+      console.log('[FUEL] Unsynced local entries to keep:', onlyLocal.length);
+
+      entries = [...sheetsEntries, ...onlyLocal];
       saveLocal();
       onlyLocal.length ? markUnsaved() : markSaved();
+
+      // Show what's loaded for today
+      const today = new Date().toISOString().split('T')[0];
+      const todayCount = entries.filter(e => e.date === today).length;
+      console.log('[FUEL] Today (' + today + ') entries after merge:', todayCount);
+      updateSyncBannerText('✓ ' + entries.length + ' entries loaded (' + todayCount + ' today)');
+      setTimeout(hideSyncBanner, 2000);
+
+    } else {
+      throw new Error('Sheets returned error: ' + (data.message || 'unknown'));
     }
-    // If status != ok, keep whatever entries we already have
-  } catch(e) {
-    // Offline or error — silently keep current entries (already loaded from local in init)
-    console.warn('Sheets sync failed:', e.message);
+
+  } catch(err) {
+    console.warn('[FUEL] Sheets sync failed:', err.message);
+    updateSyncBannerText('⚠ Offline — showing cached data');
+    setTimeout(hideSyncBanner, 3000);
+    // Keep whatever is already in entries (loaded from localStorage in init)
   }
+}
+
+function updateSyncBannerText(msg) {
+  const b = document.getElementById('syncBanner');
+  if (b) { b.textContent = msg; b.style.display = 'block'; }
 }
 
 // ── VIEW SWITCH ──────────────────────────────────────────────────
